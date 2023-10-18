@@ -1,54 +1,34 @@
-const express =require('express')
-const axios = require('axios')
-const csv = require('csv-parser');
-const fs = require('fs')
-const cors =require('cors')
-let app = express()
+import express from 'express'
+import dotenv from 'dotenv'
+import db from './config/db.js'
+import UserAuth from './routes/UserAuth.js';
+import CategoryRouter from './routes/CategoryRouter.js'
+import ProductRouter from './routes/ProductRouter.js'
+import CartRouter from './routes/CartRouter.js'
+import AddressRouter from './routes/AddressRouter.js'
+import cors from 'cors'
 
-app.use(cors())
-app.use(express.json()); 
+// config dot env file 
 
-app.listen(8080, ()=>{
-    console.log("server start")
+dotenv.config()
+    // middleware 
+    let app = express()
+    app.use(cors())
+    app.use(express.json());
+    app.use('/uploads', express.static('uploads'));
+//database 
+db()
+app.use(express.json())
+let port = process.env.PORT || 8080;
+
+app.use('/api/auth/', UserAuth);
+app.use('/api/category/', CategoryRouter); 
+app.use('/api/product/',ProductRouter)
+app.use('/api/cart/',CartRouter)
+app.use('/api/address',AddressRouter)
+app.listen(port, () => {
+    console.log(`your server running at ${port}`)
 })
-app.get("/",async (req,res)=>{
-    try{
-        let r = await axios.get("http://vehicletrack.biz/api/companyvehiclelatestinfo?token=C_3BD0B0A02B")
-
-        return res.status(r.status).json(r.data)
-    }catch(err){
-        console.error(err)
-    }
+app.get('/', (req, res) => {
+    res.send("welcome to dark side look like something went worg")
 })
-
-app.post('/filterData', (req, res) => {
-    const { vehicleNo, startDate, endDate } = req.body;
-  
-    if (!vehicleNo || !startDate || !endDate) {
-      return res.status(400).json({ error: 'Missing parameters: vehicleNo, startDate, or endDate' });
-    }
-  
-    const results = [];
-    const csvFilePath = 'gps.csv';
-    fs.createReadStream(csvFilePath)
-      .pipe(csv())
-      .on('data', (row) => {
-        if (row.VehicleNo === vehicleNo) {
-          const rowDate = new Date(row.Date);
-          const startDateTime = new Date(startDate);
-          const endDateTime = new Date(endDate);
-  
-          if (rowDate >= startDateTime && rowDate <= endDateTime) {
-            results.push(row);
-          }
-        }
-      })
-      .on('end', () => {
-        console.log('CSV file reading and filtering complete.');
-        res.json({ data: results });
-      })
-      .on('error', (error) => {
-        console.error('Error reading CSV file:', error.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-      });
-  });
