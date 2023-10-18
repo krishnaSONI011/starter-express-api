@@ -1,34 +1,18 @@
 import mongoose from "mongoose";
 
-let UserShema = new mongoose.Schema({
-    firstname:{
+const UserShema = mongoose.Schema({
+    name:{
         type:String,
         required:true
     },
     email:{
         type:String,
-        required:true,
-        unique:true,
+        required:true
     },
     password:{
         type:String,
-        required:true,
-
-    },
-    phone:{
-        type:String,
-        required:true,
-
-    },
-    lastname:{
-        type:String,
-        requred:true
-    },
-    role:{
-        type:Number,
-        defalut:0
+        required:true
     }
+},{timestamps:true});
 
-},{timestamps:true})
-
-export default mongoose.model('users',UserShema)
+export default mongoose.model('users',UserShema);
